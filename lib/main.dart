@@ -7,6 +7,7 @@ import 'color_helper.dart';
 import 'dart:io' show Platform;
 
 String selectedUrl = 'https://blinksarea.wixsite.com/blinkapp';
+const kAndroidUserAgent = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -55,21 +56,24 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
 
     _onStateChanged =
         flutterWebViewPlugin.onStateChanged.listen((WebViewStateChanged state) {
-      if (state.type == WebViewState.finishLoad) {
-        flutterWebViewPlugin.evalJavascript("""
+          if(state.type == WebViewState.startLoad){
+            flutterWebViewPlugin.evalJavascript("""
               setTimeout(function() {
-                var styleNode = document.createElement('style');
+                /*var styleNode = document.createElement('style');
                 styleNode.type = "text/css";
                 var styleText = document.createTextNode('#SITE_HEADER{padding-top: $statusBarHeight !important; }');
                 styleNode.appendChild(styleText);
-                document.getElementsByTagName('head')[0].appendChild(styleNode);
+                document.getElementsByTagName('head')[0].appendChild(styleNode);*/
                 var script = document.createElement("script");
                 script.src = "https://blinks.app/assets/blinksarea/custom.js?v=${DateTime.now()}";
                 document.head.appendChild(script);
               }, 500);
             """);
-        flutterWebViewPlugin.show();
-      }
+          }
+
+          if (state.type == WebViewState.finishLoad) {
+            flutterWebViewPlugin.show();
+          }
     });
   }
 
@@ -98,7 +102,12 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
     flutterWebViewPlugin.launch(selectedUrl,
         debuggingEnabled: true,
         hidden: true,
-        rect: _buildRect(MediaQuery.of(context)));
+        rect: _buildRect(MediaQuery.of(context)),
+      userAgent: kAndroidUserAgent,
+      useWideViewPort: true,
+      enableAppScheme: false,
+        withLocalStorage: true
+    );
 
     if ((Platform.isAndroid)) {
       setState(() {

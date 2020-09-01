@@ -7,12 +7,14 @@ import 'color_helper.dart';
 import 'dart:io' show Platform;
 
 String selectedUrl = 'https://blinksarea.wixsite.com/blinkapp';
-const kAndroidUserAgent = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36';
+const kAndroidUserAgent =
+    'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Mobile Safari/537.36';
+String color = "f8a4bb";
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(statusBarColor: HexColor("ff91ae")));
+      SystemUiOverlayStyle(statusBarColor: HexColor(color)));
   SystemChrome.setPreferredOrientations(
       [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
     runApp(new BlinksArea());
@@ -28,7 +30,7 @@ class BlinksArea extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'BlinksArea',
       theme: ThemeData(
-          primarySwatch: Colors.pink, backgroundColor: HexColor("ff91ae")),
+          primarySwatch: Colors.pink, backgroundColor: HexColor(color)),
       routes: {
         '/': (_) => BlinksAreaWebView(),
       },
@@ -56,24 +58,22 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
 
     _onStateChanged =
         flutterWebViewPlugin.onStateChanged.listen((WebViewStateChanged state) {
-          if(state.type == WebViewState.startLoad){
-            flutterWebViewPlugin.evalJavascript("""
-              setTimeout(function() {
-                /*var styleNode = document.createElement('style');
-                styleNode.type = "text/css";
-                var styleText = document.createTextNode('#SITE_HEADER{padding-top: $statusBarHeight !important; }');
-                styleNode.appendChild(styleText);
-                document.getElementsByTagName('head')[0].appendChild(styleNode);*/
-                var script = document.createElement("script");
-                script.src = "https://blinks.app/assets/blinksarea/custom.js?v=${DateTime.now()}";
-                document.head.appendChild(script);
-              }, 500);
-            """);
-          }
+      flutterWebViewPlugin.evalJavascript("""
+            setTimeout(function() {
+              var styleNode = document.createElement('style');
+              styleNode.type = "text/css";
+              var styleText = document.createTextNode('#WIX_ADS{display: none!important;}#SITE_ROOT{top: 0 !important;} #SITE_HEADER{ margin-top:0!important;} body{ background-color:#e8e6e7!important;} ');
+              styleNode.appendChild(styleText);
+              document.getElementsByTagName('head')[0].appendChild(styleNode);
+              var script = document.createElement("script");
+              script.src = "https://blinks.app/assets/blinksarea/custom.js?v=${DateTime.now()}";
+              document.head.appendChild(script);
+            }, 500);
+          """);
 
-          if (state.type == WebViewState.finishLoad) {
-            flutterWebViewPlugin.show();
-          }
+      if (state.type == WebViewState.finishLoad) {
+        flutterWebViewPlugin.show();
+      }
     });
   }
 
@@ -103,11 +103,10 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
         debuggingEnabled: true,
         hidden: true,
         rect: _buildRect(MediaQuery.of(context)),
-      userAgent: kAndroidUserAgent,
-      useWideViewPort: true,
-      enableAppScheme: false,
-        withLocalStorage: true
-    );
+        userAgent: kAndroidUserAgent,
+        useWideViewPort: true,
+        enableAppScheme: false,
+        withLocalStorage: true);
 
     if ((Platform.isAndroid)) {
       setState(() {
@@ -116,9 +115,9 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
     }
 
     return Scaffold(
-      backgroundColor: HexColor("ff91ae"),
+      backgroundColor: HexColor(color),
       body: Container(
-          color: HexColor("ff91ae"),
+          color: HexColor(color),
           height: MediaQuery.of(context).size.height,
           width: MediaQuery.of(context).size.width,
           child: Column(

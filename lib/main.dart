@@ -4,13 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
 import 'color_helper.dart';
+import 'dart:io' show Platform;
 
 String selectedUrl = 'https://blinksarea.wixsite.com/blinkapp';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown])
-      .then((_) {
+  SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(statusBarColor: HexColor("ff91ae")));
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]).then((_) {
     runApp(new BlinksArea());
   });
 }
@@ -24,9 +27,7 @@ class BlinksArea extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'BlinksArea',
       theme: ThemeData(
-        primarySwatch: Colors.pink,
-        backgroundColor: HexColor("ff91ae")
-      ),
+          primarySwatch: Colors.pink, backgroundColor: HexColor("ff91ae")),
       routes: {
         '/': (_) => BlinksAreaWebView(),
       },
@@ -40,11 +41,11 @@ class BlinksAreaWebView extends StatefulWidget {
 }
 
 class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
-
   final flutterWebViewPlugin = FlutterWebviewPlugin();
   StreamSubscription<WebViewStateChanged> _onStateChanged;
 
-  String statusBarHeight = "24.0px";
+  String statusBarHeight = (Platform.isAndroid) ? "24.0px" : "0px";
+  bool launched = false;
 
   @override
   void initState() {
@@ -54,8 +55,8 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
 
     _onStateChanged =
         flutterWebViewPlugin.onStateChanged.listen((WebViewStateChanged state) {
-          if (state.type == WebViewState.finishLoad) {
-            flutterWebViewPlugin.evalJavascript("""
+      if (state.type == WebViewState.finishLoad) {
+        flutterWebViewPlugin.evalJavascript("""
               setTimeout(function() {
                 var styleNode = document.createElement('style');
                 styleNode.type = "text/css";
@@ -67,9 +68,21 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
                 document.head.appendChild(script);
               }, 500);
             """);
-            flutterWebViewPlugin.show();
-          }
-        });
+        flutterWebViewPlugin.show();
+      }
+    });
+  }
+
+  Rect _buildRect(MediaQueryData mediaQuery) {
+    final topPadding = mediaQuery.padding.top;
+    final top = topPadding;
+    var height = mediaQuery.size.height - top;
+
+    if (height < 0.0) {
+      height = 0.0;
+    }
+
+    return new Rect.fromLTWH(0.0, top, mediaQuery.size.width, height);
   }
 
   @override
@@ -82,27 +95,37 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
 
   @override
   Widget build(BuildContext context) {
-    flutterWebViewPlugin.launch(selectedUrl, debuggingEnabled: true, hidden: true);
+    flutterWebViewPlugin.launch(selectedUrl,
+        debuggingEnabled: true,
+        hidden: true,
+        rect: _buildRect(MediaQuery.of(context)));
 
-    setState(() {
-      statusBarHeight = MediaQuery.of(context).padding.top.toString() + "px";
-    });
+    if ((Platform.isAndroid)) {
+      setState(() {
+        statusBarHeight = MediaQuery.of(context).padding.top.toString() + "px";
+      });
+    }
 
     return Scaffold(
-      backgroundColor: HexColor("f8a4bb"),
+      backgroundColor: HexColor("ff91ae"),
       body: Container(
-        color: HexColor("f8a4bb"),
-        height: MediaQuery.of(context).size.height,
-        width:  MediaQuery.of(context).size.width,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          color: HexColor("ff91ae"),
+          height: MediaQuery.of(context).size.height,
+          width: MediaQuery.of(context).size.width,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               SizedBox(
                 height: 200.0,
                 child: Stack(
                   children: <Widget>[
-                    Center(child: Image.asset("assets/logo.jpg", width: 50.0,),),
+                    Center(
+                      child: Image.asset(
+                        "assets/logo.jpg",
+                        width: 50.0,
+                      ),
+                    ),
                     Center(
                       child: Container(
                         width: 50,
@@ -116,8 +139,7 @@ class _BlinksAreaWebViewState extends State<BlinksAreaWebView> {
                 ),
               ),
             ],
-          )
-      ),
+          )),
     );
   }
 }
